@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/RainbowKatz/go-gas/station"
@@ -29,12 +28,12 @@ func main() {
 	//Create gas station
 	mainStation = station.CreateStation(stationName, pumpCount, pumpRate, operatingTime)
 
-	//Open gas station with a wait group that keeps station open
-	var wg sync.WaitGroup
-	mainStation.Open(&wg)
+	//Open gas station
+	mainStation.Open()
 
-	//Wait for all station go routines to complete (i.e. station timer, pump inputs, etc.)
-	wg.Wait()
+	//Wait for last operating stage to complete before station if officially closed
+	lastOpStageIdx := len(station.OperatingStageNames)-1
+	mainStation.OperatingStages[station.OperatingStageNames[lastOpStageIdx]].Wait()
 
 	mainStation.LogMessage("Station is now CLOSED!")
 }
