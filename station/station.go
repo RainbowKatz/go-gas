@@ -7,13 +7,32 @@ import (
 )
 
 var (
+	//pump delays (in seconds) for powering up/down (warmup/cooldown)
 	warmup, cooldown = 3, 5
+
+	opStagePumpsUp *sync.WaitGroup
+	opStageStationHours *sync.WaitGroup
+	opStagePumpsDown *sync.WaitGroup
 )
+
+func CreateStation(stationName string, pumpCount int, pumpRate, operatingTime time.Duration) *Station {
+	return &Station{
+		Name: stationName,
+		Pumps: createPumps(pumpCount, pumpRate),
+		OperatingTime: operatingTime,
+		OperatingStages: map[string]*sync.WaitGroup{
+			"PUMPS_UP": opStagePumpsUp,
+			"STATION_HOURS": opStageStationHours,
+			"PUMPS_DOWN": opStagePumpsDown,
+		},
+	}
+}
 
 type Station struct {
 	Name string
 	Pumps []*Pump
 	OperatingTime time.Duration
+	OperatingStages map[string]*sync.WaitGroup
 	IsOpen bool
 }
 
@@ -55,14 +74,6 @@ func(s *Station) Close() {
 
 func(s *Station) LogMessage(msg string) {
 	log.Printf("[STATION %s] %s\n\n", s.Name, msg)
-}
-
-func CreateStation(stationName string, pumpCount int, pumpRate, operatingTime time.Duration) *Station {
-	return &Station{
-		Name: stationName,
-		Pumps: createPumps(pumpCount, pumpRate),
-		OperatingTime: operatingTime,
-	}
 }
 
 func createPumps(pumpCount int, pumpRate time.Duration) []*Pump {
