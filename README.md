@@ -6,7 +6,7 @@ Quick self-contained demo of some basic Go features.  Requires Docker if Go not 
 go run main.go
 ```
 
-# Build new binary from source and run with Docker
+# Build source and expose binary via volume to local 'build' directory.  Then, run binary.
 ```
 sh ./devtools/rebuild.sh
 ```

@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-gas/station"
+	"github.com/RainbowKatz/go-gas/station"
 )
 
 const (

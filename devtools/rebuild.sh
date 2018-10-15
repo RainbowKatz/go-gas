@@ -1,6 +1,8 @@
 #!/bin/sh
+#
+# Run this script from repo root
 
-cd /Users/katzt007/git/me/go-gas
+mkdir build || true
 
 # Clean old binary
 rm ./build/app || true
@@ -9,7 +11,7 @@ rm ./build/app || true
 docker build -t gogas:latest .
 
 # 2) Run container to update binary
-docker run --rm -v /Users/katzt007/git/me/go-gas/build:/go/src/gogas/gogas/build gogas:latest
+docker run --rm -v $(pwd)/build:/go/src/github.com/RainbowKatz/go-gas/build gogas:latest
 
 # 3) Execute binary
 echo ""
