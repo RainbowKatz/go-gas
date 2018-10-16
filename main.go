@@ -37,6 +37,8 @@ func main() {
 	//Wait for end of operating hours
 	<-stationTimer.C
 
+	mainStation.LogMessage(">>ANNOUNCEMENT<<\n\n***\n***\n\nOperating hours are over!\n\n***\n***")
+
 	//Begin station closing, all routines must complete before station is officially closed
 	mainStation.Close()
 }

@@ -7,29 +7,28 @@ import (
 )
 
 var (
-	//OperatingStageNames is an ordered list of stages in the course of a day in station operation
-	OperatingStageNames = []string{"OPENING", "CLOSING"}
-
-	//Wait groups for each operating stage
-	opStagePumpsUp sync.WaitGroup
-	opStageStationHours sync.WaitGroup
-	opStagePumpsDown sync.WaitGroup
+	//operatingStageNames is an ordered list of stages in the course of a day in station operation
+	operatingStageNames = []string{"OPENING", "CLOSING"}
 
 	//pump delays (in seconds) for powering up/down (warmup/cooldown)
 	warmup, cooldown = 3, 5
-
 )
 
 func CreateStation(stationName string, pumpCount int, pumpRate, operatingTime time.Duration) *Station {
-	return &Station{
+	gasStation := &Station{
 		Name: stationName,
 		Pumps: createPumps(pumpCount, pumpRate),
 		OperatingTime: operatingTime,
-		OperatingStages: map[string]*sync.WaitGroup{
-			"OPENING": &opStagePumpsUp,
-			"CLOSING": &opStagePumpsDown,
-		},
+		OperatingStages: map[string]*sync.WaitGroup{},
 	}
+
+	//populate OperatingStages WaitGroup's dynamically
+	for _, stageName := range operatingStageNames {
+		wg := sync.WaitGroup{}
+		gasStation.OperatingStages[stageName] = &wg
+	}
+
+	return gasStation
 }
 
 type Station struct {
