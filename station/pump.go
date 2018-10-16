@@ -13,16 +13,20 @@ type Pump struct {
 }
 
 func(p *Pump) On(warmup int, wg *sync.WaitGroup) {
+	defer wg.Done()
+	
 	p.LogMessage("Powering up..")
 	
 	// warm up period
 	time.Sleep(time.Second * time.Duration(warmup))
 	
 	// start listening to Input
-	go p.pollInput(wg)
+	go p.pollInput()
 }
 
-func(p *Pump) Off(cooldown int) {
+func(p *Pump) Off(cooldown int, wg *sync.WaitGroup) {
+	defer wg.Done()
+	
 	// cooldown period
 	p.LogMessage("Powering down..")
 
@@ -31,8 +35,7 @@ func(p *Pump) Off(cooldown int) {
 	*p.Input<-"off"
 }
 
-func(p *Pump) pollInput(wg *sync.WaitGroup) {
-	defer wg.Done()
+func(p *Pump) pollInput() {
 	for {
 		//wait for input message
 		message := <-*p.Input

@@ -30,10 +30,13 @@ func main() {
 
 	//Open gas station
 	mainStation.Open()
+	
+	//Start timer that expires at the end of operating hours
+	stationTimer := time.NewTimer(mainStation.OperatingTime)
 
-	//Wait for last operating stage to complete before station if officially closed
-	lastOpStageIdx := len(station.OperatingStageNames)-1
-	mainStation.OperatingStages[station.OperatingStageNames[lastOpStageIdx]].Wait()
+	//Wait for end of operating hours
+	<-stationTimer.C
 
-	mainStation.LogMessage("Station is now CLOSED!")
+	//Begin station closing, all routines must complete before station is officially closed
+	mainStation.Close()
 }

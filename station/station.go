@@ -8,12 +8,12 @@ import (
 
 var (
 	//OperatingStageNames is an ordered list of stages in the course of a day in station operation
-	OperatingStageNames = []string{"PUMPS_UP", "STATION_HOURS", "PUMPS_DOWN"}
+	OperatingStageNames = []string{"OPENING", "CLOSING"}
 
 	//Wait groups for each operating stage
-	opStagePumpsUp *sync.WaitGroup
-	opStageStationHours *sync.WaitGroup
-	opStagePumpsDown *sync.WaitGroup
+	opStagePumpsUp sync.WaitGroup
+	opStageStationHours sync.WaitGroup
+	opStagePumpsDown sync.WaitGroup
 
 	//pump delays (in seconds) for powering up/down (warmup/cooldown)
 	warmup, cooldown = 3, 5
@@ -26,9 +26,8 @@ func CreateStation(stationName string, pumpCount int, pumpRate, operatingTime ti
 		Pumps: createPumps(pumpCount, pumpRate),
 		OperatingTime: operatingTime,
 		OperatingStages: map[string]*sync.WaitGroup{
-			"PUMPS_UP": opStagePumpsUp,
-			"STATION_HOURS": opStageStationHours,
-			"PUMPS_DOWN": opStagePumpsDown,
+			"OPENING": &opStagePumpsUp,
+			"CLOSING": &opStagePumpsDown,
 		},
 	}
 }
@@ -42,40 +41,37 @@ type Station struct {
 }
 
 func(s *Station) Open() {
-	s.LogMessage("Station is now OPEN!")
+	s.LogMessage("Station is opening.  Transactions not yet accepted.  Starting up pumps now..")
 	s.IsOpen = true
 
 	//Add to wait group
-	pumpsUpWg := s.OperatingStages["PUMPS_UP"]
-	*pumpsUpWg.Add(len(s.Pumps)+1)
-
-	//Wait for end of station operating time
-	stationTimer := time.NewTimer(s.OperatingTime)
-
-	//Spawn go routine that exits after station operating time
-	go func(wg *sync.WaitGroup) {
-		defer wg.Done()
-		defer s.Close()
-		<-stationTimer.C
-	}(pumpsUpWg)
+	s.OperatingStages["OPENING"].Add(len(s.Pumps))
 
 	//Turn on pumps
 	for _, pump := range s.Pumps {
-		go pump.On(warmup, s.OperatingStages["PUMPS_UP"])
+		go pump.On(warmup, s.OperatingStages["OPENING"])
 
 		//Ping pump to ensure on and listening
 		*pump.Input<-"hello"
 	}
+
+	s.OperatingStages["OPENING"].Wait()
+
+	s.LogMessage("Station is now OPEN!")
 }
 
 func(s *Station) Close() {
 	s.LogMessage("Station is closing.  No new transactions accepted.  Shutting down pumps now..")
 	s.IsOpen = false
 
-	//Turn off pumps
+	//Shut off pumps
+	s.OperatingStages["CLOSING"].Add(len(s.Pumps))
 	for _, pump := range s.Pumps {
-		go pump.Off(cooldown)
+		go pump.Off(cooldown, s.OperatingStages["CLOSING"])
 	}
+	s.OperatingStages["CLOSING"].Wait()
+
+	s.LogMessage("Station is now CLOSED!")
 }
 
 func(s *Station) LogMessage(msg string) {
