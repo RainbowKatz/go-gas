@@ -1,15 +1,19 @@
 FROM golang:alpine
 
-ENV GOPATH=/go
-ENV APP_DIR=$GOPATH/src/github.com/RainbowKatz/go-gas
+ENV APP_DIR=/app/go-gas
 ENV GOOS=darwin
 ENV GOARCH=amd64
 
 WORKDIR $APP_DIR
 
-COPY . $APP_DIR
+COPY go.mod go.mod
 
+RUN go mod download
+
+COPY . .
+
+# main ENTRYPOINT that outputs binary to directory that is exposed as volume in local folder outside container
 ENTRYPOINT go build -o build/app .
 
-# Run with following:
-# docker run --name gogas --rm -v build:/go/src/github.com/RainbowKatz/go-gas/build gogas:latest
+# Build/Run with following:
+# docker build -t gogas:latest . && docker run --name gogas --rm -v `pwd`/build:/app/go-gas/build gogas:latest
