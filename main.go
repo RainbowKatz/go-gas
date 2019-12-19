@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/RainbowKatz/go-gas/station"
+	"go-gas/station"
 )
 
 const (
-	version = "v0.0.1"
+	version  = "v0.0.1"
 	overview = "This app simulates a gas station's operations for the day as they occur concurrently:\nopen, close, customer cars arriving/pumping/leaving, etc."
-	
+
 	//station args
-	stationName = "Gogas"
-	pumpCount = 4
-	pumpRate = time.Second * 5
+	stationName   = "Gogas"
+	pumpCount     = 4
+	pumpRate      = time.Second * 5
 	operatingTime = time.Second * 10
 )
 
@@ -30,7 +30,7 @@ func main() {
 
 	//Open gas station
 	mainStation.Open()
-	
+
 	//Start timer that expires at the end of operating hours
 	stationTimer := time.NewTimer(mainStation.OperatingTime)
 
